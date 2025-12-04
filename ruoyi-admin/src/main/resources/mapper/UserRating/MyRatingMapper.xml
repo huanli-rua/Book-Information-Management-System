@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.rating.mapper.MyRatingMapper">
+    
+    <resultMap type="MyRating" id="MyRatingResult">
+        <result property="userId"    column="userId"    />
+        <result property="bookIndex"    column="bookIndex"    />
+        <result property="score"    column="score"    />
+        <result property="bookName"    column="Book_Name"    />
+        <result property="author"    column="Author"    />
+        <result property="rating"    column="Rating"    />
+    </resultMap>
+
+    <sql id="selectMyRatingVo">
+        SELECT
+            u.userId,
+            u.bookIndex,
+            u.score,
+            b.Book_Name,
+            b.Author,
+            b.Rating
+        FROM user_reviews_dataset u
+        LEFT JOIN books_of_the_decade b ON u.bookIndex = b.bookIndex
+
+    </sql>
+
+    <select id="selectMyRatingList" parameterType="MyRating" resultMap="MyRatingResult">
+        <include refid="selectMyRatingVo"/>
+        <where>
+            u.userId = #{userId}
+        </where>
+    </select>
+
+
+    <delete id="deleteMyRatingByUserId" parameterType="Long">
+        delete from user_reviews_dataset where userId = #{userId} and bookIndex = #{bookIndex}
+    </delete>
+
+
+</mapper>

@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.books.mapper.BooksMapper">
+    
+    <resultMap type="Books" id="BooksResult">
+        <result property="bookIndex"    column="bookIndex"    />
+        <result property="bookName"    column="Book_Name"    />
+        <result property="author"    column="Author"    />
+        <result property="rating"    column="Rating"    />
+        <result property="numberOfVotes"    column="Number_of_Votes"    />
+        <result property="score"    column="Score"    />
+    </resultMap>
+    <!-- Detail 对象的映射 -->
+    <resultMap id="DetailResult" type="Detail">
+        <association property="books" javaType="Books" resultMap="BooksResult"/>
+        <association property="userRating" javaType="UserRating">
+            <result property="score" column="user_score"/>
+            <result property="comment" column="comment"/>
+        </association>
+    </resultMap>
+
+    <sql id="selectBooksVo">
+        select bookIndex, Book_Name, Author, Rating, Number_of_Votes, Score from books_of_the_decade
+    </sql>
+
+    <select id="selectBooksList" parameterType="Books" resultMap="BooksResult">
+        <include refid="selectBooksVo"/>
+        <where>  
+            <if test="bookName != null  and bookName != ''"> and Book_Name like concat('%', #{bookName}, '%')</if>
+            <if test="author != null  and author != ''"> and Author = #{author}</if>
+            <if test="rating != null "> and Rating &gt;= #{rating}</if>
+        </where>
+        ORDER BY Number_of_Votes DESC
+    </select>
+    
+    <select id="selectBooksByBookIndex" parameterType="Long" resultMap="BooksResult">
+        <include refid="selectBooksVo"/>
+        where bookIndex = #{bookIndex}
+    </select>
+
+    <insert id="insertBooks" parameterType="Books" useGeneratedKeys="true" keyProperty="bookIndex">
+        insert into books_of_the_decade
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="bookName != null and bookName != ''">Book_Name,</if>
+            <if test="author != null and author != ''">Author,</if>
+            <if test="rating != null">Rating,</if>
+            <if test="numberOfVotes != null">Number_of_Votes,</if>
+            <if test="score != null">Score,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="bookName != null and bookName != ''">#{bookName},</if>
+            <if test="author != null and author != ''">#{author},</if>
+            <if test="rating != null">#{rating},</if>
+            <if test="numberOfVotes != null">#{numberOfVotes},</if>
+            <if test="score != null">#{score},</if>
+         </trim>
+    </insert>
+
+    <update id="updateBooks" parameterType="Books">
+        update books_of_the_decade
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="bookName != null and bookName != ''">Book_Name = #{bookName},</if>
+            <if test="author != null and author != ''">Author = #{author},</if>
+            <if test="rating != null">Rating = #{rating},</if>
+            <if test="numberOfVotes != null">Number_of_Votes = #{numberOfVotes},</if>
+            <if test="score != null">Score = #{score},</if>
+        </trim>
+        where bookIndex = #{bookIndex}
+    </update>
+
+    <delete id="deleteBooksByBookIndex" parameterType="Long">
+        delete from books_of_the_decade where bookIndex = #{bookIndex}
+    </delete>
+
+    <delete id="deleteBooksByBookIndexs" parameterType="String">
+        delete from books_of_the_decade where bookIndex in 
+        <foreach item="bookIndex" collection="array" open="(" separator="," close=")">
+            #{bookIndex}
+        </foreach>
+    </delete>
+
+    <select id="selectDetailByBookIndex" parameterType="map" resultMap="DetailResult">
+        SELECT
+        b.bookIndex,
+        b.Book_Name,
+        b.Author,
+        b.Rating,
+        b.Number_of_Votes,
+        b.Score,
+        ur.score AS user_score,
+        ur.comment AS comment
+        FROM
+        books_of_the_decade b
+        LEFT JOIN
+        user_reviews_dataset ur
+        ON
+        b.bookIndex = ur.bookIndex
+        AND ur.userId = #{userId} <!-- 新增用户ID过滤 -->
+        WHERE
+        b.bookIndex = #{bookId}
+    </select>
+
+    <select id="selectAllCommentsByBookIndex" resultType="UserRating">
+        SELECT user_name, bookIndex, score, comment
+        FROM user_reviews_dataset,sys_user
+        WHERE bookIndex = #{bookId}
+        AND user_reviews_dataset.userId = sys_user.user_id
+    </select>
+
+</mapper>

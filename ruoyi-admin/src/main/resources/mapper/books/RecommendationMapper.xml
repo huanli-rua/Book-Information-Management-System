@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.books.mapper.RecommendationMapper">
+
+    <resultMap type="Recommendation" id="RecommendationResult">
+        <result property="userId" column="userId" />
+        <result property="bookIndex" column="bookIndex" />
+        <result property="predictedScore" column="predicted_score" />
+        <result property="bookName" column="Book_Name" />
+    </resultMap>
+
+
+    <sql id="selectRecommendationVo">
+        SELECT
+        r.userId,
+        r.bookIndex,
+        r.predicted_score,
+        b.Book_Name
+        FROM recommendation r
+        LEFT JOIN books_of_the_decade b ON r.bookIndex = b.bookIndex
+    </sql>
+
+    <select id="selectRecommendationList" parameterType="Long" resultMap="RecommendationResult">
+        <include refid="selectRecommendationVo"/>
+        <where>
+            r.userId = #{userId}
+        </where>
+    </select>
+
+</mapper>
